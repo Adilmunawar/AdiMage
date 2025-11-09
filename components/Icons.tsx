@@ -78,3 +78,13 @@ export const PaintBrushIcon: React.FC<{ className?: string }> = ({ className }) 
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19c3-.5 6-1.5 15 0" />
     </svg>
 );
+
+export const MagicEraserIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22.5c-5.132 0-9.284-3.8-9.284-8.487 0-4.686 4.152-8.487 9.284-8.487 5.131 0 9.283 3.8 9.283 8.487 0 4.687-4.152 8.487-9.283 8.487zM12 5.023c-4.043 0-7.312 2.94-7.312 6.563 0 3.623 3.269 6.563 7.312 6.563 4.043 0 7.313-2.94 7.313-6.563 0-3.623-3.27-6.563-7.313-6.563z"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.45 13.5l-6.9-6.9"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.243 15.243l-1.697-1.697c-.468-.468-.468-1.229 0-1.697l5.106-5.106c.468-.468 1.229-.468 1.697 0l1.697 1.697c.468.468.468 1.229 0 1.697l-5.106 5.106c-.468.468-1.229.468-1.697 0z"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75l-3-3"/>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 8.25l-3-3"/>
+  </svg>
+);

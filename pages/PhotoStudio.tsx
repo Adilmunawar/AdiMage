@@ -2,9 +2,10 @@ import React, { useState, useCallback } from 'react';
 import type { UploadedImage } from '../types';
 import { generateEditedImage } from '../services/geminiService';
 import ImageUploader from '../components/ImageUploader';
+import ImageMasker from '../components/ImageMasker';
 import ResultDisplay from '../components/ResultDisplay';
 import { 
-  SparklesIcon, ArrowLeftIcon, UserCircleIcon, CameraIcon, PhotoIcon, PencilSquareIcon, WandSparklesIcon, TagIcon, PaintBrushIcon, UploadIcon 
+  SparklesIcon, ArrowLeftIcon, UserCircleIcon, CameraIcon, PhotoIcon, PencilSquareIcon, WandSparklesIcon, TagIcon, PaintBrushIcon, UploadIcon, MagicEraserIcon
 } from '../components/Icons';
 import type { Page } from '../App';
 
@@ -18,66 +19,69 @@ const templateConfigs = {
     title: "Photo Studio",
     Icon: SparklesIcon,
     iconColor: 'text-indigo-400',
-    bgColor: 'bg-indigo-500/20',
-    defaultPrompt: "A professional, well-lit studio portrait with a neutral grey background.",
-    description: "Add images and specify age for realistic height scaling.",
+    // FIX: Add missing description property
+    description: "Combine multiple photos into a single, professional studio portrait.",
   },
   profilePicturePro: {
     title: "Profile Picture Pro",
     Icon: UserCircleIcon,
     iconColor: 'text-sky-400',
-    bgColor: 'bg-sky-500/20',
-    defaultPrompt: "A professional, corporate headshot suitable for a social media profile. The background is a simple, out-of-focus office setting. The lighting is flattering and highlights the person's face.",
     description: "Generate a professional headshot. For best results, upload one clear photo of the subject.",
   },
   vintageCamera: {
     title: "Vintage Camera",
     Icon: CameraIcon,
     iconColor: 'text-amber-400',
-    bgColor: 'bg-amber-500/20',
-    defaultPrompt: "A vintage photograph from the 1970s, captured on grainy 35mm film with a classic analog camera. The colors are slightly faded and warm, with a soft vignette effect.",
     description: "Apply classic film effects and retro styles to your photos.",
   },
   backgroundScene: {
     title: "Background Scene",
     Icon: PhotoIcon,
     iconColor: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/20',
-    defaultPrompt: "The people are standing together on a scenic mountain overlook at sunset, enjoying the view.",
     description: "Place your subjects in entirely new and creative environments.",
   },
   textToImage: {
     title: "Text-to-Image Studio",
     Icon: PencilSquareIcon,
     iconColor: 'text-rose-400',
-    bgColor: 'bg-rose-500/20',
-    defaultPrompt: "A photorealistic, highly detailed image of a futuristic city at night, with flying vehicles and neon signs, cinematic lighting.",
     description: "Generate a new image from scratch based on your text description.",
   },
   photoRestoration: {
     title: "AI Photo Restoration",
     Icon: WandSparklesIcon,
     iconColor: 'text-yellow-400',
-    bgColor: 'bg-yellow-500/20',
-    defaultPrompt: "Please restore this photo. Remove scratches, improve clarity, and enhance the colors.",
     description: "Repair old, damaged, or faded photos. Upload one photo to restore.",
   },
   productStudio: {
     title: "AI Product Studio",
     Icon: TagIcon,
     iconColor: 'text-cyan-400',
-    bgColor: 'bg-cyan-500/20',
-    defaultPrompt: "a clean, solid white background.",
     description: "Create professional product shots. Upload one product photo to begin.",
   },
   styleTransfer: {
     title: "AI Style Transfer",
     Icon: PaintBrushIcon,
     iconColor: 'text-violet-400',
-    bgColor: 'bg-violet-500/20',
-    defaultPrompt: "Apply the artistic style.",
     description: "Transfer the style from one image to another. Upload a content image and a style image.",
   },
+  magicEraser: {
+    title: "Magic Eraser",
+    Icon: MagicEraserIcon,
+    iconColor: 'text-teal-400',
+    description: "Upload an image, then brush over any unwanted objects to remove them.",
+  },
+};
+
+const defaultPrompts = {
+  photoStudio: "A professional, well-lit studio portrait with a neutral grey background.",
+  profilePicturePro: "A professional, corporate headshot suitable for a social media profile. The background is a simple, out-of-focus office setting. The lighting is flattering and highlights the person's face.",
+  vintageCamera: "A vintage photograph from the 1970s, captured on grainy 35mm film with a classic analog camera. The colors are slightly faded and warm, with a soft vignette effect.",
+  backgroundScene: "The people are standing together on a scenic mountain overlook at sunset, enjoying the view.",
+  textToImage: "A photorealistic, highly detailed image of a futuristic city at night, with flying vehicles and neon signs, cinematic lighting.",
+  photoRestoration: "Please restore this photo. Remove scratches, improve clarity, and enhance the colors.",
+  productStudio: "a clean, solid white background.",
+  styleTransfer: "Apply the artistic style.",
+  magicEraser: "You are an expert photo editor. Your task is to perform inpainting. The user has provided two images: the first is the original photo, and the second is a mask image. The white areas on the mask indicate the object(s) to be completely removed from the original photo. Your goal is to remove the masked object(s) and realistically fill in the empty space. The filled area should seamlessly blend with the surrounding background, matching its texture, lighting, and patterns. Do not alter any unmasked parts of the image. Output only the final, edited image.",
 };
 
 const SingleImageUploader: React.FC<{onImageUpload: (image: UploadedImage) => void; uploadedImage: UploadedImage | null; title: string;}> = ({onImageUpload, uploadedImage, title}) => {
@@ -96,13 +100,13 @@ const SingleImageUploader: React.FC<{onImageUpload: (image: UploadedImage) => vo
     return (
         <div>
             <input type="file" id="style-image-upload" className="hidden" onChange={onFileChange} accept="image/*" />
-            <label htmlFor="style-image-upload" className="w-full h-32 border-2 border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-center">
+            <label htmlFor="style-image-upload" className="w-full h-32 border-2 border-slate-700/80 border-dashed rounded-xl cursor-pointer bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 transition-all flex items-center justify-center p-2">
                 {uploadedImage ? (
-                    <img src={uploadedImage.base64} alt="Style preview" className="w-full h-full object-contain p-1 rounded-lg" />
+                    <img src={uploadedImage.base64} alt="Style preview" className="w-full h-full object-contain rounded-lg" />
                 ) : (
                     <div className="text-center">
                         <UploadIcon className="w-6 h-6 mx-auto mb-2 text-slate-400" />
-                        <span className="text-sm font-semibold text-slate-300">{title}</span>
+                        <span className="text-sm font-semibold text-indigo-400">{title}</span>
                     </div>
                 )}
             </label>
@@ -110,13 +114,19 @@ const SingleImageUploader: React.FC<{onImageUpload: (image: UploadedImage) => vo
     );
 };
 
+const GradientDivider = () => (
+  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
+);
+
 
 const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome, mode }) => {
   const config = templateConfigs[mode];
   
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [styleImage, setStyleImage] = useState<UploadedImage | null>(null);
-  const [prompt, setPrompt] = useState<string>(config.defaultPrompt);
+  const [eraserImage, setEraserImage] = useState<UploadedImage | null>(null);
+  const [maskImage, setMaskImage] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState<string>(defaultPrompts[mode]);
   const [negativePrompt, setNegativePrompt] = useState<string>("blurry, deformed, extra limbs, poorly drawn, text, watermark, ugly, disfigured, mutated, missing limbs");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [variationImages, setVariationImages] = useState<string[]>([]);
@@ -128,6 +138,21 @@ const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome, mode }) => {
   const handleImagesUpload = useCallback((images: UploadedImage[]) => {
     setUploadedImages(images);
   }, []);
+
+  const handleEraserImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setEraserImage({ file, base64: base64String });
+        setMaskImage(null);
+        setGeneratedImage(null);
+        setError(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   const buildFinalPrompt = useCallback(() => {
     const aspectRatioMap = {
@@ -139,6 +164,9 @@ const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome, mode }) => {
     const negativePromptInstruction = `Do not include any of the following: ${negativePrompt}.`;
 
     switch (mode) {
+      case 'magicEraser':
+        return defaultPrompts.magicEraser;
+
       case 'textToImage':
         return `
 **TASK**: Create a new image from scratch based on the following description.
@@ -237,7 +265,16 @@ ${prompt}
 
 
   const handleGenerate = async () => {
-    if (mode !== 'textToImage' && uploadedImages.length === 0) {
+    if (mode === 'magicEraser') {
+      if (!eraserImage) {
+        setError("Please upload an image to edit.");
+        return;
+      }
+      if (!maskImage) {
+        setError("Please brush over an object to remove it.");
+        return;
+      }
+    } else if (mode !== 'textToImage' && uploadedImages.length === 0) {
       setError("Please upload at least one image.");
       return;
     }
@@ -245,7 +282,7 @@ ${prompt}
       setError("Please upload a style image.");
       return;
     }
-    if (!prompt.trim()) {
+    if (!prompt.trim() && mode !== 'magicEraser') {
       setError("Please enter a prompt.");
       return;
     }
@@ -257,14 +294,16 @@ ${prompt}
 
     try {
       let imagesForApi: UploadedImage[] = [];
-      if (mode === 'profilePicturePro' || mode === 'photoRestoration' || mode === 'productStudio') {
+      if (mode === 'magicEraser' && eraserImage && maskImage) {
+        imagesForApi = [eraserImage, { file: new File([], 'mask.png'), base64: maskImage }];
+      } else if (mode === 'profilePicturePro' || mode === 'photoRestoration' || mode === 'productStudio') {
         imagesForApi = uploadedImages.length > 0 ? [uploadedImages[0]] : [];
       } else if (mode === 'styleTransfer') {
         imagesForApi = uploadedImages.length > 0 && styleImage ? [uploadedImages[0], styleImage] : [];
       } else if (mode !== 'textToImage') {
         imagesForApi = uploadedImages;
       }
-
+      
       const base64Images = imagesForApi.map(img => img.base64);
       const finalPrompt = buildFinalPrompt();
       const result = await generateEditedImage(base64Images, finalPrompt);
@@ -277,6 +316,8 @@ ${prompt}
   };
   
   const handleGenerateVariations = async () => {
+    if (mode === 'magicEraser') return;
+
     if ((mode !== 'textToImage' && uploadedImages.length === 0) || !prompt.trim() || !generatedImage) {
       setError("Original settings are required to generate variations.");
       return;
@@ -315,142 +356,188 @@ ${prompt}
     }
   };
   
-  const isGenerateDisabled = isLoading || isGeneratingVariations || (mode !== 'textToImage' && uploadedImages.length === 0);
+  const isGenerateDisabled = isLoading || isGeneratingVariations ||
+    (mode !== 'textToImage' && mode !== 'magicEraser' && uploadedImages.length === 0) ||
+    (mode === 'magicEraser' && (!eraserImage || !maskImage));
 
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans flex flex-col">
-       <header className="py-4 px-4 sm:px-8 border-b border-slate-700/50 flex items-center gap-4 sticky top-0 bg-slate-900/80 backdrop-blur-md z-20">
-            <button onClick={onBackToHome} className="p-2 rounded-full hover:bg-slate-700 transition-colors" aria-label="Back to home">
-                <ArrowLeftIcon className="w-6 h-6 text-slate-300" />
-            </button>
-            <div className="flex items-center gap-3">
-                <div className={`p-2 ${config.bgColor} rounded-lg`}>
-                    <config.Icon className={`w-6 h-6 ${config.iconColor}`} />
+  const renderInputPanel = () => {
+    if (mode === 'magicEraser') {
+      return (
+        <>
+         <div>
+            <h2 className="text-lg font-semibold mb-1">1. Upload Photo</h2>
+            <p className="text-sm text-slate-400 mb-4">{config.description}</p>
+            <label htmlFor="eraser-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-700/80 border-dashed rounded-xl cursor-pointer bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 transition-all">
+              <div className="flex flex-col items-center justify-center">
+                <UploadIcon className="w-8 h-8 mb-2 text-slate-400" />
+                <span className="font-semibold text-sm text-indigo-400">
+                  {eraserImage ? 'Change Image' : 'Click to upload'}
+                </span>
+                <span className="text-xs text-slate-500">PNG, JPG, or WEBP</span>
+              </div>
+              <input id="eraser-upload" type="file" accept="image/*" className="hidden" onChange={handleEraserImageUpload} />
+            </label>
+          </div>
+          {eraserImage && (
+            <>
+              <GradientDivider />
+              <div>
+                <h2 className="text-lg font-semibold mb-1">2. Erase Object</h2>
+                <p className="text-sm text-slate-400 mb-4">Brush over anything you want to remove.</p>
+                <ImageMasker imageUrl={eraserImage.base64} onMaskChange={setMaskImage} />
+              </div>
+            </>
+          )}
+        </>
+      )
+    }
+
+    return (
+      <>
+        {mode !== 'textToImage' && (
+            <div>
+              <h2 className="text-lg font-semibold mb-1">1. Upload Photos</h2>
+              <p className="text-sm text-slate-400 mb-4">{config.description}</p>
+              <ImageUploader onImagesUpload={handleImagesUpload} showAgeInput={mode === 'photoStudio'} />
+              {['profilePicturePro', 'photoRestoration', 'productStudio', 'styleTransfer'].includes(mode) && uploadedImages.length > 1 && (
+                <div className="mt-3 text-xs text-amber-400 bg-amber-900/30 border border-amber-500/30 p-2 rounded-md">
+                    <strong>Note:</strong> This mode only uses the first uploaded image.
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-50">AdiFlux - {config.title}</h1>
+              )}
+              {mode === 'styleTransfer' && (
+                  <div className="mt-4">
+                    <SingleImageUploader onImageUpload={setStyleImage} uploadedImage={styleImage} title="Upload Style Image" />
+                  </div>
+              )}
+            </div>
+        )}
+        
+        <GradientDivider />
+
+        <div>
+          <h2 className="text-lg font-semibold mb-1">{mode === 'textToImage' ? '1.' : '2.'} Describe Your Vision</h2>
+          <p className="text-sm text-slate-400 mb-4">
+            {
+              {
+                'productStudio': 'Describe the background for your product.',
+                'textToImage': 'Describe the image you want to create.',
+                'styleTransfer': 'Add any guiding keywords for the style transfer.'
+              }[mode] || 'Describe the background and style of your portrait.'
+            }
+          </p>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="e.g., A professional, well-lit studio portrait..."
+            className="w-full h-24 p-3 bg-slate-800/80 border border-slate-700 rounded-lg focus:outline-none transition-shadow form-input"
+            disabled={isLoading || isGeneratingVariations}
+          />
+        </div>
+        
+        <GradientDivider />
+
+        <div>
+          <h2 className="text-lg font-semibold mb-1">{mode === 'textToImage' ? '2.' : '3.'} Select Aspect Ratio</h2>
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            {(['4:5', '1:1', '16:9'] as const).map(ratio => (
+              <button
+                key={ratio}
+                onClick={() => setAspectRatio(ratio)}
+                disabled={isLoading || isGeneratingVariations}
+                className={`py-2.5 px-2 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden ${
+                  aspectRatio === ratio
+                    ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
+              >
+                {
+                  {
+                    '4:5': 'Portrait (4:5)',
+                    '1:1': 'Square (1:1)',
+                    '16:9': 'Landscape (16:9)'
+                  }[ratio]
+                }
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <GradientDivider />
+        
+        <div>
+          <h2 className="text-lg font-semibold mb-1">{mode === 'textToImage' ? '3.' : '4.'} Things to Avoid (Optional)</h2>
+          <p className="text-sm text-slate-400 mb-4">Use a negative prompt to exclude unwanted elements.</p>
+          <textarea
+            value={negativePrompt}
+            onChange={(e) => setNegativePrompt(e.target.value)}
+            placeholder="e.g., blurry faces, extra fingers..."
+            className="w-full h-24 p-3 bg-slate-800/80 border border-slate-700 rounded-lg focus:outline-none transition-shadow form-input"
+            disabled={isLoading || isGeneratingVariations}
+          />
+        </div>
+      </>
+    );
+  };
+  
+  return (
+    <div className="min-h-screen font-sans flex flex-col">
+       <header className="py-4 px-4 sm:px-8 sticky top-0 bg-slate-950/80 backdrop-blur-lg z-20 border-b border-slate-800">
+            <div className="max-w-7xl mx-auto flex items-center gap-4">
+                <button onClick={onBackToHome} className="p-2 rounded-full hover:bg-slate-800 transition-colors" aria-label="Back to home">
+                    <ArrowLeftIcon className="w-6 h-6 text-slate-300" />
+                </button>
+                <div className="flex items-center gap-3">
+                    <config.Icon className={`w-7 h-7 ${config.iconColor}`} />
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-50">{config.title}</h1>
+                </div>
             </div>
         </header>
       
       <main className="flex-grow p-4 sm:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Left Panel: Inputs */}
-          <div className="flex flex-col gap-6 bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-            {mode !== 'textToImage' && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-1">1. Upload Photos</h2>
-                  <p className="text-sm text-slate-400 mb-4">{config.description}</p>
-                  <ImageUploader onImagesUpload={handleImagesUpload} showAgeInput={mode === 'photoStudio'} />
-                  {['profilePicturePro', 'photoRestoration', 'productStudio', 'styleTransfer'].includes(mode) && uploadedImages.length > 1 && (
-                    <div className="mt-3 text-xs text-amber-400 bg-amber-900/30 border border-amber-500/30 p-2 rounded-md">
-                        <strong>Note:</strong> This mode only uses the first uploaded image.
-                    </div>
-                  )}
-                  {mode === 'styleTransfer' && (
-                     <div className="mt-4">
-                        <SingleImageUploader onImageUpload={setStyleImage} uploadedImage={styleImage} title="Upload Style Image" />
-                     </div>
-                  )}
-                </div>
-            )}
-            
-            <div className="border-t border-slate-700"></div>
-
-            <div>
-              <h2 className="text-lg font-semibold mb-1">{mode === 'textToImage' ? '1.' : '2.'} Describe Your Vision</h2>
-              <p className="text-sm text-slate-400 mb-4">
-                {
-                  {
-                    'productStudio': 'Describe the background for your product.',
-                    'textToImage': 'Describe the image you want to create.',
-                    'styleTransfer': 'Add any guiding keywords for the style transfer.'
-                  }[mode] || 'Describe the background and style of your portrait.'
-                }
-              </p>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., A professional, well-lit studio portrait with a neutral grey background."
-                className="w-full h-24 p-3 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow"
-                disabled={isLoading || isGeneratingVariations}
-              />
+          <div className="relative p-px rounded-xl bg-gradient-to-br from-slate-700 to-slate-800">
+            <div className="flex flex-col gap-6 bg-slate-900/80 backdrop-blur-sm p-6 rounded-[11px]">
+              {renderInputPanel()}
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerateDisabled}
+                className="relative w-full flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-lg text-white transition-all duration-300 overflow-hidden group mt-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <span className="absolute left-0 w-full h-full bg-white opacity-0 transition-opacity duration-300 group-hover:opacity-10"></span>
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                  <SparklesIcon className="w-5 h-5" />
+                    Generate Image
+                  </>
+                )}
+              </button>
             </div>
-            
-            <div className="border-t border-slate-700"></div>
-
-            <div>
-              <h2 className="text-lg font-semibold mb-1">{mode === 'textToImage' ? '2.' : '3.'} Select Aspect Ratio</h2>
-              <div className="grid grid-cols-3 gap-3 mt-4">
-                {(['4:5', '1:1', '16:9'] as const).map(ratio => (
-                  <button
-                    key={ratio}
-                    onClick={() => setAspectRatio(ratio)}
-                    disabled={isLoading || isGeneratingVariations}
-                    className={`py-2.5 px-2 rounded-lg font-semibold text-sm transition-colors duration-200 flex items-center justify-center gap-2 ${
-                      aspectRatio === ratio
-                        ? 'bg-indigo-600 text-white shadow-lg'
-                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                    }`}
-                  >
-                    {
-                      {
-                        '4:5': 'Portrait (4:5)',
-                        '1:1': 'Square (1:1)',
-                        '16:9': 'Landscape (16:9)'
-                      }[ratio]
-                    }
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-t border-slate-700"></div>
-            
-            <div>
-              <h2 className="text-lg font-semibold mb-1">{mode === 'textToImage' ? '3.' : '4.'} Things to Avoid (Optional)</h2>
-              <p className="text-sm text-slate-400 mb-4">Use a negative prompt to exclude unwanted elements.</p>
-              <textarea
-                value={negativePrompt}
-                onChange={(e) => setNegativePrompt(e.target.value)}
-                placeholder="e.g., blurry faces, extra fingers..."
-                className="w-full h-24 p-3 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow"
-                disabled={isLoading || isGeneratingVariations}
-              />
-            </div>
-
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerateDisabled}
-              className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 mt-4"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                 <SparklesIcon className="w-5 h-5" />
-                  Generate Image
-                </>
-              )}
-            </button>
           </div>
 
+
           {/* Right Panel: Output */}
-          <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 min-h-[400px] lg:min-h-0 lg:sticky lg:top-24">
-             <ResultDisplay 
-                isLoading={isLoading} 
-                error={error} 
-                generatedImage={generatedImage}
-                variationImages={variationImages}
-                isGeneratingVariations={isGeneratingVariations}
-                onGenerateVariations={handleGenerateVariations}
-              />
+          <div className="relative p-px rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 lg:sticky lg:top-24 h-fit">
+            <div className="bg-slate-900/80 backdrop-blur-sm p-6 rounded-[11px] min-h-[400px] lg:min-h-0">
+              <ResultDisplay 
+                  isLoading={isLoading} 
+                  error={error} 
+                  generatedImage={generatedImage}
+                  variationImages={variationImages}
+                  isGeneratingVariations={isGeneratingVariations}
+                  onGenerateVariations={handleGenerateVariations}
+                />
+            </div>
           </div>
         </div>
       </main>
 
-       <footer className="text-center py-4 px-4 sm:px-8 text-xs text-slate-500 border-t border-slate-700/50">
+       <footer className="text-center py-4 px-4 sm:px-8 text-xs text-slate-500 border-t border-slate-800">
         <p>Proudly Developed by Adil Munawar</p>
       </footer>
     </div>

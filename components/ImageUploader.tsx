@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import type { UploadedImage } from '../types';
 import { UploadIcon } from './Icons';
@@ -44,7 +43,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload, showAgeIn
   const onDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('border-indigo-400');
+    e.currentTarget.classList.remove('border-indigo-400', 'scale-105');
     handleFileChange(e.dataTransfer.files);
   };
 
@@ -56,13 +55,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload, showAgeIn
   const onDragEnter = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.add('border-indigo-400');
+    e.currentTarget.classList.add('border-indigo-400', 'scale-105');
   }
   
   const onDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('border-indigo-400');
+    e.currentTarget.classList.remove('border-indigo-400', 'scale-105');
   }
 
   const handleAgeChange = (index: number, age: string) => {
@@ -84,16 +83,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload, showAgeIn
     <div className="w-full">
       <label
         htmlFor="file-upload"
-        className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-600 border-dashed rounded-lg cursor-pointer bg-slate-800 hover:bg-slate-700 transition-colors"
+        className="relative flex flex-col items-center justify-center w-full h-48 border-2 border-slate-700/80 border-dashed rounded-xl cursor-pointer bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 transition-all duration-300 ease-in-out transform hover:scale-[1.02] overflow-hidden"
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
       >
-        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+        <div className="absolute inset-0 z-0 opacity-20" style={{ backgroundImage: `radial-gradient(circle, #4f46e5 0%, transparent 60%)` }}></div>
+        <div className="relative z-10 flex flex-col items-center justify-center pt-5 pb-6">
           <UploadIcon className="w-8 h-8 mb-4 text-slate-400" />
-          <p className="mb-2 text-sm text-slate-400">
-            <span className="font-semibold">Click to upload</span> or drag and drop
+          <p className="mb-2 text-sm text-slate-300">
+            <span className="font-semibold text-indigo-400">Click to upload</span> or drag and drop
           </p>
           <p className="text-xs text-slate-500">PNG, JPG, or WEBP</p>
         </div>
@@ -109,10 +109,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload, showAgeIn
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {images.map((image, index) => (
-              <div key={index} className="aspect-square bg-slate-800 rounded-md overflow-hidden relative">
+              <div key={index} className="aspect-square bg-slate-800/50 rounded-md overflow-hidden relative group transition-transform duration-200 hover:scale-105">
                 <img src={image.base64} alt={`preview ${index}`} className="w-full h-full object-cover" />
                  {showAgeInput && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1">
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-1">
                         <label htmlFor={`age-${index}`} className="sr-only">Age</label>
                         <input
                         id={`age-${index}`}

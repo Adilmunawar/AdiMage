@@ -10,7 +10,8 @@ export type Page = 'home'
   | 'textToImage'
   | 'photoRestoration'
   | 'productStudio'
-  | 'styleTransfer';
+  | 'styleTransfer'
+  | 'magicEraser';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -34,6 +35,7 @@ function App() {
     case 'photoRestoration':
     case 'productStudio':
     case 'styleTransfer':
+    case 'magicEraser':
       return <PhotoStudio mode={currentPage} onBackToHome={handleBackToHome} />;
     default:
       return <HomePage onSelectTemplate={handleSelectTemplate} />;
