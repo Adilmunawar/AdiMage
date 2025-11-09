@@ -5,9 +5,10 @@ import { UploadIcon } from './Icons';
 
 interface ImageUploaderProps {
   onImagesUpload: (images: UploadedImage[]) => void;
+  showAgeInput?: boolean;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload, showAgeInput = false }) => {
   const [images, setImages] = useState<UploadedImage[]>([]);
 
   const handleFileChange = useCallback((files: FileList | null) => {
@@ -110,19 +111,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesUpload }) => {
             {images.map((image, index) => (
               <div key={index} className="aspect-square bg-slate-800 rounded-md overflow-hidden relative">
                 <img src={image.base64} alt={`preview ${index}`} className="w-full h-full object-cover" />
-                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1">
-                    <label htmlFor={`age-${index}`} className="sr-only">Age</label>
-                    <input
-                      id={`age-${index}`}
-                      type="number"
-                      placeholder="Age?"
-                      value={image.age || ''}
-                      onChange={(e) => handleAgeChange(index, e.target.value)}
-                      className="w-full bg-transparent text-white text-xs text-center border-0 focus:ring-0 p-0.5 placeholder-slate-300"
-                      min="0"
-                      max="150"
-                    />
-                  </div>
+                 {showAgeInput && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1">
+                        <label htmlFor={`age-${index}`} className="sr-only">Age</label>
+                        <input
+                        id={`age-${index}`}
+                        type="number"
+                        placeholder="Age?"
+                        value={image.age || ''}
+                        onChange={(e) => handleAgeChange(index, e.target.value)}
+                        className="w-full bg-transparent text-white text-xs text-center border-0 focus:ring-0 p-0.5 placeholder-slate-300"
+                        min="0"
+                        max="150"
+                        />
+                    </div>
+                 )}
               </div>
             ))}
           </div>

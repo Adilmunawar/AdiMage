@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import HomePage from './pages/HomePage';
 import PhotoStudio from './pages/PhotoStudio';
 
-export type Page = 'home' | 'photoStudio' | 'profilePicturePro' | 'vintageCamera' | 'backgroundScene';
+export type Page = 'home' 
+  | 'photoStudio' 
+  | 'profilePicturePro' 
+  | 'vintageCamera' 
+  | 'backgroundScene'
+  | 'textToImage'
+  | 'photoRestoration'
+  | 'productStudio'
+  | 'styleTransfer';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -22,6 +30,10 @@ function App() {
     case 'profilePicturePro':
     case 'vintageCamera':
     case 'backgroundScene':
+    case 'textToImage':
+    case 'photoRestoration':
+    case 'productStudio':
+    case 'styleTransfer':
       return <PhotoStudio mode={currentPage} onBackToHome={handleBackToHome} />;
     default:
       return <HomePage onSelectTemplate={handleSelectTemplate} />;

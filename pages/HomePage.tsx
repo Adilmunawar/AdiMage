@@ -1,5 +1,5 @@
 import React from 'react';
-import { SparklesIcon, UserCircleIcon, CameraIcon, PhotoIcon } from '../components/Icons';
+import { SparklesIcon, UserCircleIcon, CameraIcon, PhotoIcon, PencilSquareIcon, WandSparklesIcon, TagIcon, PaintBrushIcon } from '../components/Icons';
 import type { Page } from '../App';
 
 interface HomePageProps {
@@ -17,12 +17,48 @@ const templates = [
     enabled: true,
   },
   {
+    id: 'textToImage',
+    title: 'Text-to-Image Studio',
+    description: 'Generate a new image from scratch using only a text description.',
+    icon: PencilSquareIcon,
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/20',
+    enabled: true,
+  },
+  {
     id: 'profilePicturePro',
     title: 'Profile Picture Pro',
     description: 'Generate professional, high-quality headshots for your profile.',
     icon: UserCircleIcon,
     color: 'text-sky-400',
     bgColor: 'bg-sky-500/20',
+    enabled: true,
+  },
+  {
+    id: 'photoRestoration',
+    title: 'AI Photo Restoration',
+    description: 'Repair old, scratched, or faded photos and bring them back to life.',
+    icon: WandSparklesIcon,
+    color: 'text-yellow-400',
+    bgColor: 'bg-yellow-500/20',
+    enabled: true,
+  },
+  {
+    id: 'productStudio',
+    title: 'AI Product Studio',
+    description: 'Create professional product photos with custom backgrounds.',
+    icon: TagIcon,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/20',
+    enabled: true,
+  },
+  {
+    id: 'styleTransfer',
+    title: 'AI Style Transfer',
+    description: 'Apply the artistic style of one image to another photo.',
+    icon: PaintBrushIcon,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/20',
     enabled: true,
   },
   {
@@ -91,8 +127,8 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectTemplate }) => {
       </header>
 
       <main className="py-10 px-4 sm:px-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {templates.map((template) => (
               <TemplateCard 
                 key={template.id} 
