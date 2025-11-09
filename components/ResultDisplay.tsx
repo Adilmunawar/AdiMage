@@ -8,6 +8,7 @@ interface ResultDisplayProps {
     variationImages: string[];
     isGeneratingVariations: boolean;
     onGenerateVariations: () => void;
+    loadingMessage: string;
 }
 
 const LoadingSpinner: React.FC<{text?: string}> = ({text = "Generating your masterpiece..."}) => (
@@ -20,7 +21,7 @@ const LoadingSpinner: React.FC<{text?: string}> = ({text = "Generating your mast
     </div>
 );
 
-const ResultDisplay: React.FC<ResultDisplayProps> = ({ isLoading, error, generatedImage, variationImages, isGeneratingVariations, onGenerateVariations }) => {
+const ResultDisplay: React.FC<ResultDisplayProps> = ({ isLoading, error, generatedImage, variationImages, isGeneratingVariations, onGenerateVariations, loadingMessage }) => {
     const handleDownload = (imageUrl: string) => {
         if (!imageUrl) return;
         const link = document.createElement('a');
@@ -32,7 +33,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ isLoading, error, generat
     };
 
     if (isLoading) {
-        return <LoadingSpinner />;
+        return <LoadingSpinner text={loadingMessage} />;
     }
 
     if (error) {
