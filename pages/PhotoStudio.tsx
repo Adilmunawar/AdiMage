@@ -3,15 +3,55 @@ import type { UploadedImage } from '../types';
 import { generateEditedImage } from '../services/geminiService';
 import ImageUploader from '../components/ImageUploader';
 import ResultDisplay from '../components/ResultDisplay';
-import { SparklesIcon, ArrowLeftIcon } from '../components/Icons';
+import { SparklesIcon, ArrowLeftIcon, UserCircleIcon, CameraIcon, PhotoIcon } from '../components/Icons';
+import type { Page } from '../App';
 
 interface PhotoStudioProps {
   onBackToHome: () => void;
+  mode: Exclude<Page, 'home'>;
 }
 
-const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome }) => {
+const templateConfigs = {
+  photoStudio: {
+    title: "Photo Studio",
+    Icon: SparklesIcon,
+    iconColor: 'text-indigo-400',
+    bgColor: 'bg-indigo-500/20',
+    defaultPrompt: "A professional, well-lit studio portrait with a neutral grey background.",
+    description: "Add images and specify age for realistic height scaling.",
+  },
+  profilePicturePro: {
+    title: "Profile Picture Pro",
+    Icon: UserCircleIcon,
+    iconColor: 'text-sky-400',
+    bgColor: 'bg-sky-500/20',
+    defaultPrompt: "A professional, corporate headshot suitable for a social media profile. The background is a simple, out-of-focus office setting. The lighting is flattering and highlights the person's face.",
+    description: "Generate a professional headshot. For best results, upload one clear photo of the subject.",
+  },
+  vintageCamera: {
+    title: "Vintage Camera",
+    Icon: CameraIcon,
+    iconColor: 'text-amber-400',
+    bgColor: 'bg-amber-500/20',
+    defaultPrompt: "A vintage photograph from the 1970s, captured on grainy 35mm film with a classic analog camera. The colors are slightly faded and warm, with a soft vignette effect.",
+    description: "Apply classic film effects and retro styles to your photos.",
+  },
+  backgroundScene: {
+    title: "Background Scene",
+    Icon: PhotoIcon,
+    iconColor: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/20',
+    defaultPrompt: "The people are standing together on a scenic mountain overlook at sunset, enjoying the view.",
+    description: "Place your subjects in entirely new and creative environments.",
+  },
+};
+
+
+const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome, mode }) => {
+  const config = templateConfigs[mode];
+  
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [prompt, setPrompt] = useState<string>("A professional, well-lit studio portrait with a neutral grey background.");
+  const [prompt, setPrompt] = useState<string>(config.defaultPrompt);
   const [negativePrompt, setNegativePrompt] = useState<string>("blurry, deformed, extra limbs, poorly drawn, text, watermark, ugly, disfigured");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [variationImages, setVariationImages] = useState<string[]>([]);
@@ -25,11 +65,6 @@ const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome }) => {
   }, []);
   
   const buildFinalPrompt = useCallback(() => {
-    const personDescriptions = uploadedImages.map((image, index) => {
-      const ageInfo = image.age ? `who is ${image.age} years old` : 'of unknown age';
-      return `- Person ${index + 1} (from image ${index + 1}): A person ${ageInfo}. IMPORTANT: You must retain their original clothing, hairstyle, and distinct facial features from their photo.`;
-    }).join('\n');
-
     const aspectRatioMap = {
       '4:5': 'a 4:5 portrait aspect ratio',
       '1:1': 'a 1:1 square aspect ratio',
@@ -37,8 +72,42 @@ const PhotoStudio: React.FC<PhotoStudioProps> = ({ onBackToHome }) => {
     };
     const aspectRatioInstruction = `The final image must have ${aspectRatioMap[aspectRatio]}.`;
 
+    if (mode === 'profilePicturePro' && uploadedImages.length > 0) {
+        const person = uploadedImages[0]; // Only consider the first person
+        const ageInfo = person.age ? `who is ${person.age} years old` : 'of unknown age';
+        const personDescription = `- A person ${ageInfo}. IMPORTANT: You must retain their original clothing, hairstyle, and distinct facial features from their photo. The final result must be a head-and-shoulders composition.`;
+
+        return `
+**TASK**: Create a single, photorealistic, professional headshot of the person from the provided image.
+
+**PERSON TO FEATURE**:
+${personDescription}
+
+**SCENE DESCRIPTION**:
+${prompt}
+
+**ASPECT RATIO**:
+${aspectRatioInstruction}
+
+**NEGATIVE PROMPT (Things to AVOID)**:
+Do not include any of the following: ${negativePrompt}.
+        `.trim();
+    }
+
+    const personDescriptions = uploadedImages.map((image, index) => {
+      const ageInfo = image.age ? `who is ${image.age} years old` : 'of unknown age';
+      return `- Person ${index + 1} (from image ${index + 1}): A person ${ageInfo}. IMPORTANT: You must retain their original clothing, hairstyle, and distinct facial features from their photo.`;
+    }).join('\n');
+
+    let taskDescription = "Create a single, cohesive, photorealistic image featuring ALL the people from the provided images.";
+    if (mode === 'vintageCamera') {
+        taskDescription = "Apply a vintage camera effect to the provided photo(s), creating a single, cohesive, retro-styled image."
+    } else if (mode === 'backgroundScene') {
+        taskDescription = "Place the people from the provided photos into a new scene, creating a single, cohesive, photorealistic image."
+    }
+
     return `
-**TASK**: Create a single, cohesive, photorealistic studio portrait featuring ALL the people from the provided images.
+**TASK**: ${taskDescription}
 
 **PEOPLE TO INCLUDE**:
 ${personDescriptions}
@@ -47,10 +116,10 @@ ${personDescriptions}
 ${prompt}
 
 **ARRANGEMENT & SCALING INSTRUCTIONS**:
-- Arrange all individuals in a natural, believable group pose suitable for a professional portrait. They should be standing or sitting together.
-- **CRITICAL**: Use the provided ages to ensure realistic height and body proportions relative to one another. Younger individuals (children, teens) must be visibly shorter than adults. The scaling must be photorealistic.
-- Ensure consistent lighting, shadows, and color grading across all subjects to make them look like they were photographed together in the same room.
-- The final composition should be clean, well-composed, and professional.
+- Arrange all individuals in a natural, believable pose suitable for the scene.
+- **CRITICAL**: If multiple people are present, use the provided ages to ensure realistic height and body proportions relative to one another. Younger individuals must be visibly shorter than adults.
+- Ensure consistent lighting, shadows, and color grading across all subjects to make them look like they were photographed together in the same environment.
+- The final composition should be clean and well-composed.
 
 **ASPECT RATIO**:
 ${aspectRatioInstruction}
@@ -58,7 +127,7 @@ ${aspectRatioInstruction}
 **NEGATIVE PROMPT (Things to AVOID)**:
 Do not include any of the following: ${negativePrompt}.
     `.trim();
-  }, [uploadedImages, prompt, negativePrompt, aspectRatio]);
+  }, [uploadedImages, prompt, negativePrompt, aspectRatio, mode]);
 
 
   const handleGenerate = async () => {
@@ -77,7 +146,8 @@ Do not include any of the following: ${negativePrompt}.
     setVariationImages([]);
 
     try {
-      const base64Images = uploadedImages.map(img => img.base64);
+      const imagesForApi = mode === 'profilePicturePro' && uploadedImages.length > 0 ? [uploadedImages[0]] : uploadedImages;
+      const base64Images = imagesForApi.map(img => img.base64);
       const finalPrompt = buildFinalPrompt();
       const result = await generateEditedImage(base64Images, finalPrompt);
       setGeneratedImage(result);
@@ -98,7 +168,8 @@ Do not include any of the following: ${negativePrompt}.
     setError(null);
 
     try {
-      const base64Images = uploadedImages.map(img => img.base64);
+      const imagesForApi = mode === 'profilePicturePro' && uploadedImages.length > 0 ? [uploadedImages[0]] : uploadedImages;
+      const base64Images = imagesForApi.map(img => img.base64);
       const finalPrompt = buildFinalPrompt();
       
       const variationPromises = Array(4).fill(0).map(() => 
@@ -122,10 +193,10 @@ Do not include any of the following: ${negativePrompt}.
                 <ArrowLeftIcon className="w-6 h-6 text-slate-300" />
             </button>
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-500/20 rounded-lg">
-                    <SparklesIcon className="w-6 h-6 text-indigo-400" />
+                <div className={`p-2 ${config.bgColor} rounded-lg`}>
+                    <config.Icon className={`w-6 h-6 ${config.iconColor}`} />
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-50">AdiFlux - Photo Studio</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-50">AdiFlux - {config.title}</h1>
             </div>
         </header>
       
@@ -135,8 +206,13 @@ Do not include any of the following: ${negativePrompt}.
           <div className="flex flex-col gap-6 bg-slate-800/50 p-6 rounded-xl border border-slate-700">
             <div>
               <h2 className="text-lg font-semibold mb-1">1. Upload Photos</h2>
-              <p className="text-sm text-slate-400 mb-4">Add images and specify age for realistic height scaling.</p>
+              <p className="text-sm text-slate-400 mb-4">{config.description}</p>
               <ImageUploader onImagesUpload={handleImagesUpload} />
+              {mode === 'profilePicturePro' && uploadedImages.length > 1 && (
+                <div className="mt-3 text-xs text-amber-400 bg-amber-900/30 border border-amber-500/30 p-2 rounded-md">
+                    <strong>Note:</strong> Profile Picture Pro mode only uses the first uploaded image to generate a headshot.
+                </div>
+              )}
             </div>
             
             <div className="border-t border-slate-700"></div>

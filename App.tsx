@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import HomePage from './pages/HomePage';
 import PhotoStudio from './pages/PhotoStudio';
 
-export type Page = 'home' | 'photoStudio';
+export type Page = 'home' | 'photoStudio' | 'profilePicturePro' | 'vintageCamera' | 'backgroundScene';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -19,7 +19,10 @@ function App() {
     case 'home':
       return <HomePage onSelectTemplate={handleSelectTemplate} />;
     case 'photoStudio':
-      return <PhotoStudio onBackToHome={handleBackToHome} />;
+    case 'profilePicturePro':
+    case 'vintageCamera':
+    case 'backgroundScene':
+      return <PhotoStudio mode={currentPage} onBackToHome={handleBackToHome} />;
     default:
       return <HomePage onSelectTemplate={handleSelectTemplate} />;
   }

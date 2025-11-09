@@ -23,7 +23,7 @@ const templates = [
     icon: UserCircleIcon,
     color: 'text-sky-400',
     bgColor: 'bg-sky-500/20',
-    enabled: false,
+    enabled: true,
   },
   {
     id: 'vintageCamera',
@@ -32,7 +32,7 @@ const templates = [
     icon: CameraIcon,
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/20',
-    enabled: false,
+    enabled: true,
   },
   {
     id: 'backgroundScene',
@@ -41,7 +41,7 @@ const templates = [
     icon: PhotoIcon,
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/20',
-    enabled: false,
+    enabled: true,
   },
 ];
 
