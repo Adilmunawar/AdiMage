@@ -1,0 +1,5 @@
+{
+  "name": "AdiFlux",
+  "description": "Upload photos of friends or family, and use AI to generate an advanced studio portrait with everyone posing together. You can also use text prompts for other creative image edits.",
+  "requestFramePermissions": []
+}
